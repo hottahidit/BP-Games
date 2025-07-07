@@ -1,1 +1,2 @@
-# Project documentation
+# Project Overview
+This is for my KS3 Baccalaureate. More specifically, for the creative strand. This project will initially use NiceGUI to sort out the logic, before I will create a web app using flask or django - I haven't decided yet. I can then focus on using CSS to style my webpage because I can reuse the existing logic. I will not focus on the looks on the NiceGUI beta. For reference, this project was not written or coded by AI, however it is essential to note I did use it a little to help me in research and fixing non-code related problems like my git origin not finding this repo or my venv not working because pip-whl won't install.
