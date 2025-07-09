@@ -1,2 +1,5 @@
 .BP
 gitkey.txt
+./__pychache__
+./Flask_BPG/__pycache__
+./Logic/__pycache__
