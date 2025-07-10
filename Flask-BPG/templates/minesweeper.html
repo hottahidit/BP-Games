@@ -8,6 +8,7 @@
       font-family: sans-serif;
       text-align: center;
       padding: 2rem;
+      background-color: #f5f5f5;
     }
 
     .grid {
@@ -42,19 +43,45 @@
       color: white;
       font-weight: bold;
     }
+
+    .cell.flagged {
+      background-color: orange;
+      color: black;
+      font-weight: bold;
+    }
+
+    .cell[data-value="1"] { color: blue; }
+    .cell[data-value="2"] { color: green; }
+    .cell[data-value="3"] { color: red; }
+    .cell[data-value="4"] { color: navy; }
+    .cell[data-value="5"] { color: maroon; }
+    .cell[data-value="6"] { color: turquoise; }
+    .cell[data-value="7"] { color: black; }
+    .cell[data-value="8"] { color: gray; }
+
+    h1 {
+      margin-bottom: 1rem;
+    }
+
+    button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 14px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
   <h1>Minesweeper</h1>
   <div id="grid" class="grid"></div>
+  <button onclick="window.location.href='/reset'">Restart</button>
 
   <script>
     const rows = 10;
     const cols = 10;
     const gridEl = document.getElementById('grid');
 
-    // Create grid
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const cell = document.createElement('div');
@@ -62,26 +89,80 @@
         cell.dataset.row = r;
         cell.dataset.col = c;
 
-        // Left-click event
         cell.addEventListener('click', () => {
+          if (cell.classList.contains('flagged') || cell.classList.contains('revealed')) return;
+
           fetch(`/reveal?row=${r}&col=${c}`)
             .then(res => res.json())
             .then(data => {
+              const gameOver = data.some(item => item.game_over);
+
               data.forEach(item => {
                 const selector = `[data-row="${item.row}"][data-col="${item.col}"]`;
                 const target = document.querySelector(selector);
-                if (target && !target.classList.contains('revealed')) {
-                  target.classList.add('revealed');
-                  target.textContent = item.value !== 0 ? item.value : "";
-                  if (item.value === "-1") {
-                    target.classList.add('mine');
-                  }
+                if (!target || target.classList.contains('revealed')) return;
+
+                target.classList.add('revealed');
+
+                if (item.value === "-1") {
+                  target.classList.add('mine');
+                  target.textContent = "💣";
+                } else if (item.value !== 0) {
+                  target.textContent = item.value;
+                  target.setAttribute('data-value', item.value);
+                } else {
+                  target.textContent = "";
                 }
               });
+
+              if (gameOver) {
+                alert("💥 Game Over!");
+              }
+
+              checkWin();
             });
         });
 
+        cell.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          if (cell.classList.contains('revealed')) return;
+          cell.classList.toggle('flagged');
+          cell.textContent = cell.classList.contains('flagged') ? "🚩" : "";
+        });
+
         gridEl.appendChild(cell);
+      }
+    }
+
+    function checkWin() {
+      const allCells = document.querySelectorAll('.cell');
+      const revealed = [...allCells].filter(cell => cell.classList.contains('revealed')).length;
+      const total = rows * cols;
+      const mines = 10;
+
+      if (revealed === total - mines) {
+        alert("🎉 You Win!");
+        allCells.forEach(cell => {
+          if (!cell.classList.contains('revealed') && !cell.classList.contains('flagged')) {
+            const row = cell.dataset.row;
+            const col = cell.dataset.col;
+            fetch(`/reveal?row=${row}&col=${col}`)
+              .then(res => res.json())
+              .then(data => {
+                data.forEach(item => {
+                  if (item.value === "-1") {
+                    const target = document.querySelector(`[data-row="${item.row}"][data-col="${item.col}"]`);
+                    if (target && !target.classList.contains('revealed')) {
+                      target.classList.add('revealed');
+                      target.textContent = "💣";
+                      target.style.backgroundColor = 'dodgerblue';
+                      target.style.color = 'white';
+                    }
+                  }
+                });
+              });
+          }
+        });
       }
     }
   </script>
