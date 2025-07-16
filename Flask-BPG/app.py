@@ -1,125 +1,101 @@
 from flask import Flask, request, jsonify, render_template, redirect, url_for
+from minesweeper import Minesweeper
+from brick_breaker import BrickBreakerGame
 from termcolor import colored as c
 import random
+import sys
 
 app = Flask(__name__)
-
-rows = 10
-cols = 10
-num_mines = 10
 
 grid = []
 revealed = set()
 first_click_done = False
 
-def generate_grid(first_r, first_c):
-    while True:
-        temp_grid = [[0 for _ in range(cols)] for _ in range(rows)]
-        mine_positions = set()
+def ask_custom_config():
+    use_custom = input("Use custom config? (y/n): ").strip().lower()
+    if use_custom == 'y':
+        rows = int(input("Rows: "))
+        cols = int(input("Cols: "))
+        mines = int(input("Mines: "))
+        return rows, cols, mines
+    return None
 
-        forbidden = set((first_r + dr, first_c + dc) for dr in (-1, 0, 1) for dc in (-1, 0, 1) if 0 <= first_r + dr < rows and 0 <= first_c + dc < cols)
+custom_config = ask_custom_config()
+if custom_config:
+    config_rows, config_cols, config_mines = custom_config
+else:
+    config_rows, config_cols, config_mines = 10, 10, 10  # default to Easy
 
-        while len(mine_positions) < num_mines:
-            r = random.randint(0, rows - 1)
-            c = random.randint(0, cols - 1)
-            if (r, c) not in mine_positions and (r, c) not in forbidden:
-                mine_positions.add((r, c))
-
-        for r, c in mine_positions:
-            temp_grid[r][c] = -1
-
-        for r, c in mine_positions:
-            for dr in (-1, 0, 1):
-                for dc in (-1, 0, 1):
-                    nr, nc = r + dr, c + dc
-                    if 0 <= nr < rows and 0 <= nc < cols and temp_grid[nr][nc] != -1:
-                        temp_grid[nr][nc] += 1
-
-        if temp_grid[first_r][first_c] == 0:
-            return temp_grid
-
-def get_neighbours(r, c):
-    for dr in (-1, 0, 1):
-        for dc in (-1, 0, 1):
-            if dr == 0 and dc == 0:
-                continue
-            nr, nc = r + dr, c + dc
-            if 0 <= nr < rows and 0 <= nc < cols:
-                yield nr, nc
-
-
-def flood_fill(r, c):
-    to_reveal = set()
-    stack = [(r, c)]
-
-    while stack:
-        r, c = stack.pop()
-        if (r, c) in to_reveal:
-            continue
-        to_reveal.add((r, c))
-        if grid[r][c] == 0:
-            for nr, nc in get_neighbours(r, c):
-                if (nr, nc) not in to_reveal and grid[nr][nc] != -1:
-                    stack.append((nr, nc))
-    return to_reveal
-
+mgame = Minesweeper(config_rows, config_cols, config_mines)
+bgame = BrickBreakerGame()
 
 @app.route('/')
+def home():
+    return render_template('index.html')
+
+#===================== * MINESWEEPER * =========================#
+@app.route('/minesweeper')
 def minesweeper():
     return render_template('minesweeper.html')
 
+@app.route('/minesweeper-info')
+def min_info():
+    return jsonify({'rows': mgame.rows, 'cols': mgame.cols, 'mines':mgame.mines})
 
-@app.route('/reset')
-def reset():
-    global grid, revealed, first_click_done
-    grid = []
-    revealed = set()
-    first_click_done = False
-    return redirect('/')
+@app.route('/minesweeper-reset')
+def min_reset():
+    mode = request.args.get('mode', 'easy')
+    if mode == 'easy':
+        rows, cols, mines = 10, 10, 10
+    elif mode == 'medium':
+        rows, cols, mines = 18, 18, 40
+    elif mode == 'hard':
+        rows, cols, mines = 24, 24, 99
+    else:
+        rows, cols, mines = config_rows, config_cols, config_mines  # fallback to custom/default
+    global mgame
+    mgame = Minesweeper(rows, cols, mines)
+    return redirect('/minesweeper')
 
-
-@app.route('/reveal')
-def reveal():
-    global grid, revealed, first_click_done
-
+@app.route('/minesweeper-reveal')
+def min_reveal():
     r = int(request.args.get('row'))
     c = int(request.args.get('col'))
+    print(r, c)
 
-    if not first_click_done:
-        grid.clear()
-        grid.extend(generate_grid(r, c))
-        first_click_done = True
+    data, game_over = mgame.reveal_cell(r, c)
 
-    if (r, c) in revealed:
-        return jsonify([])
-
-    if grid[r][c] == 0:
-        cells = flood_fill(r, c)
-    else:
-        cells = {(r, c)}
-
-    revealed.update(cells)
-
-    data = []
-    for row, col in cells:
-        value = grid[row][col]
-        cell = {'row': row, 'col': col, 'value': value if value != -1 else "-1"}
-        data.append(cell)
-
-    if grid[r][c] == -1:
-        all_mines = [
-            {'row': row, 'col': col, 'value': "-1"}
-            for row in range(rows)
-            for col in range(cols)
-            if grid[row][col] == -1
-        ]
-        return jsonify(all_mines + data + [{'game_over': True}])
+    if game_over:
+        data.append({'game_over': True})
 
     return jsonify(data)
+#=========================== * BRICK BREAKER * ===========================#
+@app.route("/brickbreaker")
+def brickbreaker_page():
+    return render_template("brick_breaker.html")
 
-#TESTING
-for row in grid:
-    print(" ".join(str(cell) if cell != -1 else c("M", "red") for cell in row))
+@app.route("/brickbreaker-state")
+def get_state():
+    return jsonify(bgame.get_state())
+
+@app.route("/brickbreaker-step")
+def step():
+    bgame.step()
+    return jsonify(bgame.get_state())
+
+@app.route("/brickbreaker-move", methods=["POST"])
+def move_paddle():
+    direction = request.json.get("direction")
+    if direction == "left":
+        bgame.paddle.move_left()
+    elif direction == "right":
+        bgame.paddle.move_right()
+    return jsonify(bgame.get_state())
+
+@app.route("/brickbreaker-reset")
+def reset():
+    bgame.reset()
+    return jsonify(bgame.get_state())
 
 if __name__ == '__main__':
     app.run(debug=True)

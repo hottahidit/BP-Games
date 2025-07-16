@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BP Games</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #1e1e1e;
+      font-family: Arial, sans-serif;
+      color: #f0f0f0;
+    }
+
+    .container {
+      background-color: #2c2c2c;
+      padding: 2rem 3rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      text-align: center;
+    }
+
+    .container h1 {
+      margin-bottom: 1.5rem;
+      font-size: 28px;
+      color: #f9f9f9;
+    }
+
+    .button {
+      display: block;
+      width: 200px;
+      margin: 0.75rem auto;
+      padding: 0.75rem;
+      font-size: 16px;
+      background-color: #444;
+      color: #f0f0f0;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .button:hover {
+      background-color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>BP Games</h1>
+    <button class="button" onclick="window.location.href='/minesweeper'">Minesweeper</button>
+    <button class="button" onclick="window.location.href='/brickbreaker'">Brick Breaker</button>
+  </div>
+</body>
+</html>
+

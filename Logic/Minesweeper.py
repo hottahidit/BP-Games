@@ -1,3 +1,4 @@
+# Python main code for minesweeper logic
 import random
 from termcolor import colored as c
 

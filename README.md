@@ -1,2 +1,2 @@
 # Project Overview
-This is for my KS3 Baccalaureate. More specifically, for the creative strand. This project will initially test the logic in a seperate logic file before implementing in the frontend. The backend for my website is supported by Flask.
+This is for my KS3 Baccalaureate. More specifically, for the creative strand. I initially created logic to test the logic for the games. Then I migrated to Flask-BPG to hold my website. I have hosted two games: Minesweeper and Brick Breaker. I havenot used AI to make any code or debug my program. I only used ChatGPT for research purposes. This project uses flask, termcolor is optional. To download the packages, run pip install -r requirements.txt.
