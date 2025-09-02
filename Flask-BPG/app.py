@@ -1,33 +1,22 @@
 from flask import Flask, request, jsonify, render_template, redirect, url_for
 from minesweeper import Minesweeper
 from brick_breaker import BrickBreakerGame
+from LightsOut import LightsOutGame
 from termcolor import colored as c
 import random
 import sys
 
 app = Flask(__name__)
 
-grid = []
-revealed = set()
-first_click_done = False
+mgrid = []
+mrevealed = set()
+mfirst_click_done = False
 
-def ask_custom_config():
-    use_custom = input("Use custom config? (y/n): ").strip().lower()
-    if use_custom == 'y':
-        rows = int(input("Rows: "))
-        cols = int(input("Cols: "))
-        mines = int(input("Mines: "))
-        return rows, cols, mines
-    return None
-
-custom_config = ask_custom_config()
-if custom_config:
-    config_rows, config_cols, config_mines = custom_config
-else:
-    config_rows, config_cols, config_mines = 10, 10, 10  # default to Easy
+config_rows, config_cols, config_mines = 10, 10, 10  # default to Easy
 
 mgame = Minesweeper(config_rows, config_cols, config_mines)
 bgame = BrickBreakerGame()
+lgame = LightsOutGame(config_rows, config_cols)
 
 @app.route('/')
 def home():
@@ -69,6 +58,37 @@ def min_reveal():
         data.append({'game_over': True})
 
     return jsonify(data)
+#=========================== * LIGHTS OUT * ==============================#
+@app.route('/lights-off')
+def lights_off():
+    return render_template('LightsOut.html')
+
+@app.route('/lights-off-config')
+def lights_off_config():
+    return jsonify({'rows': lgame.rows, 'cols': lgame.cols})
+
+@app.route('/lights-off-reset')
+def lights_off_reset():
+    mode = request.args.get('mode', 'easy')
+    if mode == 'easy':
+        rows, cols = 5, 5
+    elif mode == 'medium':
+        rows, cols = 8, 8
+    elif mode == 'hard':
+        rows, cols = 10, 10
+    else:
+        rows, cols = config_rows, config_cols
+    global lgame
+    lgame = LightsOutGame(rows, cols)
+    return jsonify(lgame.get_state())
+
+@app.route('/lights-off-toggle', methods=['POST'])
+def lights_off_toggle():
+    r = int(request.json.get('row'))
+    c = int(request.json.get('col'))
+    lgame.toggle(r, c)
+    return jsonify(lgame.get_state())
+
 #=========================== * BRICK BREAKER * ===========================#
 @app.route("/brickbreaker")
 def brickbreaker_page():

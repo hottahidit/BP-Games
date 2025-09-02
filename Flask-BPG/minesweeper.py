@@ -10,9 +10,9 @@ class Minesweeper:
         self.cols = cols
         self.mines = mines
 
-        self.grid = []
-        self.revealed = set()
-        self.first_click_done = False
+        self.mgrid = []
+        self.mrevealed = set()
+        self.mfirst_click_done = False
 
     def generate_grid(self, first_r, first_c):
         while True:
@@ -53,7 +53,7 @@ class Minesweeper:
             if (r, c) in to_reveal:
                 continue
             to_reveal.add((r, c))
-            if self.grid[r][c] == 0:
+            if self.mgrid[r][c] == 0:
                 for nr, nc in self.get_neighbours(r, c):
                     if (nr, nc) not in to_reveal and self.grid[nr][nc] != -1:
                         stack.append((nr, nc))
@@ -61,10 +61,10 @@ class Minesweeper:
 
     def reveal_cell(self, r, c):
         if not self.first_click_done:
-            self.grid = self.generate_grid(r, c)
-            self.first_click_done = True
+            self.mgrid = self.generate_grid(r, c)
+            self.mfirst_click_done = True
 
-        if (r, c) in self.revealed:
+        if (r, c) in self.mrevealed:
             return [], False
 
         if self.grid[r][c] == 0:
@@ -72,25 +72,25 @@ class Minesweeper:
         else:
             cells = {(r, c)}
 
-        self.revealed.update(cells)
+        self.mrevealed.update(cells)
         result = []
 
         for row, col in cells:
             value = self.grid[row][col]
             result.append({'row': row, 'col': col, 'value': value if value != -1 else "-1"})
 
-        if self.grid[r][c] == -1:
+        if self.mgrid[r][c] == -1:
             all_mines = [
                 {'row': row, 'col': col, 'value': "-1"}
                 for row in range(ROWS)
                 for col in range(COLS)
-                if self.grid[row][col] == -1
+                if self.mgrid[row][col] == -1
             ]
             return all_mines + result, True
         return result, False
 
     def reset_game(self):
-        self.grid = []
-        self.revealed = set()
-        self.first_click_done = False
+        self.mgrid = []
+        self.mrevealed = set()
+        self.mfirst_click_done = False
 
