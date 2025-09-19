@@ -5,77 +5,108 @@
   <title>Minesweeper</title>
   <style>
     body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 2rem;
-      background-color: #f5f5f5;
-    }
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  text-align: center;
+  padding: 2rem;
+  background-color: #bcdcf5; /* light sky blue */
+  margin: 0;
+}
 
-    .grid {
-      display: grid;
-      gap: 2px;
-      margin: 0 auto;
-      width: fit-content;
-    }
+h1 {
+  margin-bottom: 1rem;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+  text-shadow: 1px 1px #fff;
+}
 
-    .cell {
-      width: 30px;
-      height: 30px;
-      background-color: #ccc;
-      border: 1px solid #999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      cursor: pointer;
-      user-select: none;
-    }
+.grid {
+  display: grid;
+  gap: 2px;
+  margin: 1rem auto;
+  width: fit-content;
+  background-color: #808080;
+  padding: 6px;
+  border: 3px solid #999;
+  border-top-color: #fff;
+  border-left-color: #fff;
+  border-radius: 4px;
+}
 
-    .cell.revealed {
-      background-color: #eee;
-      cursor: default;
-    }
+.cell {
+  width: 30px;
+  height: 30px;
+  background-color: #c0c0c0;
+  border: 2px solid #999;
+  border-top-color: #fff;
+  border-left-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  box-sizing: border-box;
+}
 
-    .cell.mine {
-      background-color: red;
-      color: white;
-      font-weight: bold;
-    }
+.cell.revealed {
+  background-color: #e0e0e0;
+  border: 1px solid #999;
+  cursor: default;
+}
 
-    .cell.flagged {
-      background-color: orange;
-      color: black;
-      font-weight: bold;
-    }
+.cell.mine {
+  background-color: #d9534f;
+  color: #fff;
+}
 
-    .cell[data-value="1"] { color: blue; }
-    .cell[data-value="2"] { color: green; }
-    .cell[data-value="3"] { color: red; }
-    .cell[data-value="4"] { color: navy; }
-    .cell[data-value="5"] { color: maroon; }
-    .cell[data-value="6"] { color: turquoise; }
-    .cell[data-value="7"] { color: black; }
-    .cell[data-value="8"] { color: gray; }
+.cell.flagged {
+  background-color: #f0ad4e;
+  color: #000;
+}
 
-    h1 {
-      margin-bottom: 1rem;
-    }
+/* Number colors (unchanged) */
+.cell[data-value="1"] { color: blue; }
+.cell[data-value="2"] { color: green; }
+.cell[data-value="3"] { color: red; }
+.cell[data-value="4"] { color: navy; }
+.cell[data-value="5"] { color: maroon; }
+.cell[data-value="6"] { color: turquoise; }
+.cell[data-value="7"] { color: black; }
+.cell[data-value="8"] { color: gray; }
 
-    button, select {
-      margin-top: 1rem;
-      padding: 0.5rem 1rem;
-      font-size: 14px;
-      cursor: pointer;
-    }
+.info {
+  margin-bottom: 1rem;
+  font-size: 18px;
+  font-weight: bold;
+  color: #222;
+}
 
-    .controls {
-      margin-bottom: 1rem;
-    }
+.controls {
+  margin-bottom: 1rem;
+}
 
-    .info {
-      margin-bottom: 1rem;
-      font-size: 18px;
-    }
+button, select {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 14px;
+  cursor: pointer;
+  border: 2px solid #999;
+  border-top-color: #fff;
+  border-left-color: #fff;
+  background-color: #c0c0c0;
+  box-shadow: inset -2px -2px #999, inset 2px 2px #fff;
+}
+
+button:hover, select:hover {
+  background-color: #d6d6d6;
+}
+
+button:active, select:active {
+  box-shadow: inset 2px 2px #999, inset -2px -2px #fff;
+}
+
   </style>
 </head>
 <body>
@@ -94,7 +125,7 @@
       <option value="hard">Hard</option>
     </select>
     <button onclick="restart()">Restart</button>
-    <button onclick="goToHome()">Home</button>
+    <button onclick="window.location.href='/'">Home</button>
   </div>
 
   <div id="grid" class="grid"></div>
@@ -126,10 +157,6 @@
     function restart() {
       const difficulty = document.getElementById("difficulty").value;
       window.location.href = `/minesweeper-reset?mode=${difficulty}`;
-    }
-
-    function goToHome() {
-      window.location.href = '/'
     }
 
     function renderGrid() {

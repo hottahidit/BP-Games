@@ -1,14 +1,12 @@
 import random
 
-ROWS = 10
-COLS = 10
-MINES = 10
-
 class Minesweeper:
-    def __init__(self, rows=10, cols=10, mines=10):
+    def __init__(self, rows, cols, mines):
         self.rows = rows
         self.cols = cols
         self.mines = mines
+        global ROWS, COLS, MINES
+        ROWS, COLS, MINES = self.rows, self.cols, self.mines
 
         self.mgrid = []
         self.mrevealed = set()

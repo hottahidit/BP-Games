@@ -107,11 +107,11 @@
       ctx.fillStyle = '#071021';
       ctx.fillRect(0,0,canvas.width,canvas.height);
       if (state.food){
-        drawCell(state.food[0], state.food[1], '#ff4d4f');
-      }
+        drawCell(state.food[0], state.food[1], '#3b82f6');
+      }  // 66f 3b82f6  ff4d4f
       for (let i=0;i<state.snake.length;i++){
         let p = state.snake[i];
-        let shade = i===0 ? '#66f' : '#3b82f6';
+        let shade = i===0 ? '#ff4d4f' : '#66f';
         drawCell(p[0], p[1], shade);
       }
       scoreEl.innerText = 'Score: ' + state.score;

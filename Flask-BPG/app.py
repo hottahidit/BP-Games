@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify, render_template, redirect, url_for
 from flask_socketio import SocketIO,emit
-from minesweeper import Minesweeper
-from brick_breaker import BrickBreakerGame
-from LightsOut import LightsOutGame
-from Snake import SnakeGame
+from Logic.minesweeper import Minesweeper
+from Logic.brick_breaker import BrickBreakerGame
+from Logic.LightsOut import LightsOutGame
+from Logic.Snake import SnakeGame
 from termcolor import colored as c
 import random
 import sys

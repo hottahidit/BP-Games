@@ -13,21 +13,54 @@
       flex-direction: column;
       align-items: center;
     }
+
     canvas {
       background: #000;
       box-shadow: 0 0 20px #0ff;
       margin-top: 20px;
     }
+
     #info {
       margin-top: 10px;
       font-size: 14px;
     }
+
+    button {
+      background: transparent;
+      border: 2px solid #0ff;
+      color: #0ff;
+      padding: 8px 18px;
+      margin: 6px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-weight: bold;
+      letter-spacing: 1px;
+      transition: 0.3s;
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+    }
+
+    button:hover {
+      background: #0ff;
+      color: #000;
+      box-shadow: 0 0 20px #0ff, 0 0 40px #0ff;
+      transform: scale(1.05);
+    }
+
+    button:active {
+      transform: scale(0.95);
+      box-shadow: 0 0 8px #0ff;
+    }
+
   </style>
 </head>
 <body>
 
 <h1>Brick Breaker</h1>
-<div id="info">Lives: <span id="lives">3</span> | Level: <span id="level">1 </span></div><button onclick="goToHome()">Home</button>
+<div id="info">Lives: <span id="lives">3</span> | Level: <span id="level">1 </span></div>
+    <span><button onclick="window.location.href='/brickbreaker'">Restart</button>
+    <button onclick="window.location.href='/'">Home</button></span>
 <canvas id="gameCanvas" width="545" height="350"></canvas>
 
 <script>
@@ -85,10 +118,6 @@ function resetBall() {
   ball.y = paddle.y - ball.radius;
   ball.dx = 0;
   ball.dy = 0;
-}
-
-function goToHome() {
-    window.location.href="/"
 }
 
 function launchBall() {
@@ -150,6 +179,17 @@ function movePaddle() {
   paddle.x = Math.max(0, Math.min(canvas.width - paddle.width, paddle.x));
 }
 
+function resetGame() {
+  level = 1;
+  lives = 3;
+  document.getElementById('lives').textContent = lives;
+  document.getElementById('level').textContent = level;
+  ball.speed = 3;
+  createBricks();
+  resetBall();
+}
+  
+
 function moveBall() {
   if (!gameStarted) {
     ball.x = paddle.x + paddle.width / 2;
@@ -201,7 +241,7 @@ function moveBall() {
     document.getElementById('lives').textContent = lives;
     if (lives <= 0) {
       alert("💥 Game Over!");
-      document.location.reload();
+      resetGame();
     } else {
       resetBall();
     }
