@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Snake</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        background: linear-gradient(180deg, #0f172a, #020617);
+        color: #fff;
+      }
+
+      .container {
+        text-align: center;
+      }
+
+      canvas {
+        background: #0b1220;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        margin-top: 12px;
+      }
+
+      #hud {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+      }
+
+      #restart {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 0;
+        background: #10b981;
+        color: white;
+        cursor: pointer;
+        transition: background 0.2s ease-in-out;
+      }
+
+      #restart:hover {
+        background: #059669;
+      }
+
+      #home {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 0;
+        background: #10b981;
+        color: white;
+        cursor: pointer;
+        transition: background 0.2s ease-in-out;
+      }
+
+      #home:hover {
+        background: #059669;
+      }
+
+      .hint {
+        opacity: 0.8;
+        font-size: 14px;
+        margin-top: 10px;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Snake</h1>
+      <div id="hud">
+        <div id="score">Score: 0</div>
+        <button id="restart">Restart</button>
+        <button id="home" onclick="window.location.href='/'">Home</button>
+      </div>
+      <canvas id="game" width="400" height="400"></canvas>
+      <p class="hint">Use arrow keys or WASD to move.</p>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+    const socket = io();
+
+    let canvas = document.getElementById('game');
+    let gridW, gridH = 20
+    let cellW = canvas.width / gridW;
+    let cellH = canvas.height / gridH;
+    let ctx = canvas.getContext('2d');
+    let scoreEl = document.getElementById('score');
+    let restartBtn = document.getElementById('restart');
+    let alive = true;
+
+    function drawState(state){
+      if (state.grid){
+        gridW = state.grid[0];
+        gridH = state.grid[1];
+        cellW = canvas.width / gridW;
+        cellH = canvas.height / gridH;
+      }
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = '#071021';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      if (state.food){
+        drawCell(state.food[0], state.food[1], '#ff4d4f');
+      }
+      for (let i=0;i<state.snake.length;i++){
+        let p = state.snake[i];
+        let shade = i===0 ? '#66f' : '#3b82f6';
+        drawCell(p[0], p[1], shade);
+      }
+      scoreEl.innerText = 'Score: ' + state.score;
+      if (!state.alive){
+        ctx.fillStyle = 'white';
+        ctx.font = '20px sans-serif';
+        ctx.fillText('Game Over', canvas.width/2 - 50, canvas.height/2);
+      }
+    }
+
+    function drawCell(x,y,color){
+        ctx.fillStyle = color;
+        ctx.fillRect(x*cellW + 1, y*cellH + 1, cellW - 2, cellH - 2);
+    }
+
+    socket.on('state', state => {
+      drawState(state);
+    });
+
+    window.addEventListener('keydown', e => {
+      if (!alive) return;
+      let key = e.key;
+      let dir = null;
+      if (key === 'ArrowUp' || key === 'w') dir = {dx:0, dy:-1};
+      if (key === 'ArrowDown' || key === 's') dir = {dx:0, dy:1};
+      if (key === 'ArrowLeft' || key === 'a') dir = {dx:-1, dy:0};
+      if (key === 'ArrowRight' || key === 'd') dir = {dx:1, dy:0};
+      if (dir) socket.emit('change_dir', dir);
+    });
+
+    restartBtn.addEventListener('click', () => {
+      socket.emit('restart')
+    });
+    </script>
+  </body>
+</html>

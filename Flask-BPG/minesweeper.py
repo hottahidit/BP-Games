@@ -55,19 +55,19 @@ class Minesweeper:
             to_reveal.add((r, c))
             if self.mgrid[r][c] == 0:
                 for nr, nc in self.get_neighbours(r, c):
-                    if (nr, nc) not in to_reveal and self.grid[nr][nc] != -1:
+                    if (nr, nc) not in to_reveal and self.mgrid[nr][nc] != -1:
                         stack.append((nr, nc))
         return to_reveal
 
     def reveal_cell(self, r, c):
-        if not self.first_click_done:
+        if not self.mfirst_click_done:
             self.mgrid = self.generate_grid(r, c)
             self.mfirst_click_done = True
 
         if (r, c) in self.mrevealed:
             return [], False
 
-        if self.grid[r][c] == 0:
+        if self.mgrid[r][c] == 0:
             cells = self.flood_fill(r, c)
         else:
             cells = {(r, c)}
@@ -76,7 +76,7 @@ class Minesweeper:
         result = []
 
         for row, col in cells:
-            value = self.grid[row][col]
+            value = self.mgrid[row][col]
             result.append({'row': row, 'col': col, 'value': value if value != -1 else "-1"})
 
         if self.mgrid[r][c] == -1:

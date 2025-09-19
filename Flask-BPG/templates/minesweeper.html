@@ -94,6 +94,7 @@
       <option value="hard">Hard</option>
     </select>
     <button onclick="restart()">Restart</button>
+    <button onclick="goToHome()">Home</button>
   </div>
 
   <div id="grid" class="grid"></div>
@@ -125,6 +126,10 @@
     function restart() {
       const difficulty = document.getElementById("difficulty").value;
       window.location.href = `/minesweeper-reset?mode=${difficulty}`;
+    }
+
+    function goToHome() {
+      window.location.href = '/'
     }
 
     function renderGrid() {

@@ -57,6 +57,7 @@
         <option value="hard">Hard</option>
         </select>
         <button onclick="restart()">Restart</button>
+        <button onclick='goToHome()'>Home</button>
     </div>
     <br>
     <div id="grid" class="grid"></div>
@@ -79,6 +80,10 @@
 
         function stopTimer() {
             clearInterval(timerInterval);
+        }
+
+        function goToHome() {
+            window.location.href="/"
         }
 
         function restart() {

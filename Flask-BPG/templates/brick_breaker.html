@@ -27,7 +27,7 @@
 <body>
 
 <h1>Brick Breaker</h1>
-<div id="info">Lives: <span id="lives">3</span> | Level: <span id="level">1</span></div>
+<div id="info">Lives: <span id="lives">3</span> | Level: <span id="level">1 </span></div><button onclick="goToHome()">Home</button>
 <canvas id="gameCanvas" width="545" height="350"></canvas>
 
 <script>
@@ -85,6 +85,10 @@ function resetBall() {
   ball.y = paddle.y - ball.radius;
   ball.dx = 0;
   ball.dy = 0;
+}
+
+function goToHome() {
+    window.location.href="/"
 }
 
 function launchBall() {

@@ -1,12 +1,16 @@
 from flask import Flask, request, jsonify, render_template, redirect, url_for
+from flask_socketio import SocketIO,emit
 from minesweeper import Minesweeper
 from brick_breaker import BrickBreakerGame
 from LightsOut import LightsOutGame
+from Snake import SnakeGame
 from termcolor import colored as c
 import random
 import sys
+import time
 
 app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 mgrid = []
 mrevealed = set()
@@ -17,12 +21,20 @@ config_rows, config_cols, config_mines = 10, 10, 10  # default to Easy
 mgame = Minesweeper(config_rows, config_cols, config_mines)
 bgame = BrickBreakerGame()
 lgame = LightsOutGame(config_rows, config_cols)
+sgame = SnakeGame()
+
+def snake_loop():
+    global sgame
+    while True:
+        sgame.tick()
+        socketio.emit('state', sgame.serialize())
+        time.sleep(sgame.tick_delay)
 
 @app.route('/')
 def home():
     return render_template('index.html')
 
-#===================== * MINESWEEPER * =========================#
+#=========================== * MINESWEEPER * ===========================#
 @app.route('/minesweeper')
 def minesweeper():
     return render_template('minesweeper.html')
@@ -58,7 +70,7 @@ def min_reveal():
         data.append({'game_over': True})
 
     return jsonify(data)
-#=========================== * LIGHTS OUT * ==============================#
+#=========================== * LIGHTS OUT * ===========================#
 @app.route('/lights-off')
 def lights_off():
     return render_template('LightsOut.html')
@@ -117,6 +129,29 @@ def reset():
     bgame.reset()
     return jsonify(bgame.get_state())
 
+#=========================== * Snake * ===========================#
+@app.route('/snake')
+def snake():
+    return render_template('snake.html')
+
+@socketio.on('connect')
+def handle_connect(auth=None):
+    emit('state', sgame.serialize())
+    socketio.start_background_task(snake_loop)
+
+@socketio.on('change_dir')
+def change_dir(data):
+    global sgame
+    dx = int(data.get('dx', 0))
+    dy = int(data.get('dy', 0))
+    sgame.change_dir(dx, dy)
+
+@socketio.on('restart')
+def restart():
+    global sgame
+    sgame = SnakeGame()
+    emit('state', sgame.serialize())
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True)
 
