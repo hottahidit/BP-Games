@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Register - BP Games{% endblock %}
+
+{% block content %}
+
+<div class="card" style="max-width: 400px; margin: 50px auto;">
+    <h2>Register</h2>
+    <p><strong>Note:</strong> Your account will need admin approval before you can access the games.</p>
+    <form method="POST">
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <div class="form-group">
+            <label for="confirm_password">Confirm Password:</label>
+            <input type="password" id="confirm_password" name="confirm_password" required>
+        </div>
+        <button type="submit">Register</button>
+    </form>
+    <p style="margin-top: 20px; text-align: center;">
+        Already have an account? <a href="{{ url_for('auth.login') }}">Login here</a>
+    </p>
+</div>
+
+{% endblock %}

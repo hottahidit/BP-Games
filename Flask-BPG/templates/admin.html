@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - BP Games{% endblock %}
+
+{% block content %}
+
+<div class="card">
+    <h1>Admin Dashboard</h1>
+    
+    <h2>Pending Approvals ({{ pending_users|length }})</h2>
+    {% if pending_users %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Registration Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in pending_users %}
+                <tr>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        <a href="{{ url_for('admin.approve_user', user_id=user.id) }}">
+                            <button class="btn-success">Approve</button>
+                        </a>
+                        <a href="{{ url_for('admin.reject_user', user_id=user.id) }}" 
+                           onclick="return confirm('Are you sure you want to reject this user?')">
+                            <button class="btn-danger">Reject</button>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No pending approvals.</p>
+    {% endif %}
+
+    <h2>Approved Users ({{ approved_users|length }})</h2>
+    {% if approved_users %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Registration Date</th>
+                    <th>Approved Date</th>
+                    <th>Admin</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in approved_users %}
+                <tr>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ user.approved_at.strftime('%Y-%m-%d %H:%M') if user.approved_at else 'N/A' }}</td>
+                    <td>{{ 'Yes' if user.is_admin else 'No' }}</td>
+                    <td>
+                        {% if not user.is_admin %}
+                            <a href="{{ url_for('admin.revoke_access', user_id=user.id) }}"
+                               onclick="return confirm('Are you sure you want to revoke access for this user?')">
+                                <button class="btn-danger">Revoke Access</button>
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No approved users.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

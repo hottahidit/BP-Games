@@ -1,5 +1,4 @@
 .BP
 gitkey.txt
 *pycache*
-Flask-BPG/__pycache__*
-
+instance/
