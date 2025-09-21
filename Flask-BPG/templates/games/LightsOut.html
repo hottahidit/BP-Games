@@ -148,7 +148,7 @@
 
         function restart() {
             const difficulty = document.getElementById("difficulty").value;
-            fetch(`/lights-off-reset?mode=${difficulty}`)
+            fetch(`/games/lights-off-reset?mode=${difficulty}`)
                 .then(res => res.json())
                 .then(data => {
                     rows = data.rows;
@@ -176,7 +176,7 @@
 
                     cell.addEventListener('click', () => {
                         startTimer();
-                        fetch('/lights-off-toggle', {
+                        fetch('/games/lights-off-toggle', {
                             method: 'POST',
                             headers: {'Content-Type': 'application/json'},
                             body: JSON.stringify({row: r, col: c})
@@ -198,7 +198,7 @@
         }
 
         // Initial load
-        fetch('/lights-off-reset?mode=easy')
+        fetch('/games/lights-off-reset?mode=easy')
             .then(res => res.json())
             .then(data => {
                 rows = data.rows;

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile - BP Games{% endblock %}
+
+{% block content %}
+<div class="container-admin">
+    <h1>User Profile</h1><br>
+    <p><strong>Username:</strong> {{ user.username }}</p><br>
+    <p><strong>Email:</strong> {{ user.email }}</p><br>
+    <p><strong>Password:</strong> •••••••• (hidden)</p><br>
+    <p><strong>Registration Date:</strong> {{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+    <p><strong>Approved Date:</strong> {{ user.approved_at.strftime('%Y-%m-%d %H:%M') if user.approved_at else 'N/A' }}</p><br>
+    <p><strong>Admin:</strong> {{ 'Yes' if user.is_admin else 'No' }}</p>
+
+    <div style="margin-top:20px;">
+        <a href="{{ url_for('admin.add_admin', user_id=user.id) }}",
+           onclick="return confirm('Are you sure you want to give admin access to this user?')">
+            <button class="btn-danger">Give Admin</button>
+        </a>
+        <a href="{{ url_for('admin.revoke_access', user_id=user.id) }}" 
+           onclick="return confirm('Are you sure you want to revoke access for this user?')">
+            <button class="btn-danger">Revoke Access</button>
+        </a>
+        <a href="{{ url_for('admin.recover_user', user_id=user.id) }}">
+            <button class="btn-success">Recover</button>
+        </a>
+    </div>
+</div>
+{% endblock %}
+

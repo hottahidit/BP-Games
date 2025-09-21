@@ -7,10 +7,9 @@
   {% if current_user.is_authenticated %}
     <div class="card">
       <h2>Welcome back, {{ current_user.username }}!</h2>
-      <p>Head over to <a href="/dashboard">Games</a> page to start playing.</p>
     </div>
   {% else %}
-    <div class="card" style="text-align: center;">
+    <div class="container-start" style="text-align: center;">
       <h2>Welcome to BP Games!</h2>
       <p>Please login or register to continue.</p>
       <div style="margin-top: 20px;">

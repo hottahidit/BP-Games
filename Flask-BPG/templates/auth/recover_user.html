@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Recover User - BP Games{% endblock %}
+
+{% block content %}
+<div class="container-admin">
+    <h1>Recover User Account</h1>
+    <form method="post">
+        <div class="form-group">
+            <label for="username">New Username (leave blank to keep current)</label>
+            <input type="text" id="username" name="username" value="{{ user.username }}">
+        </div>
+        <div class="form-group">
+            <label for="password">New Password (leave blank to keep current)</label>
+            <input type="password" id="password" name="password">
+        </div>
+        <button type="submit" class="btn-success">Update</button>
+        <a href="{{ url_for('admin.user_profile', user_id=user.id) }}">
+            <button type="button" class="btn-secondary">Cancel</button>
+        </a>
+    </form>
+</div>
+{% endblock %}
+

@@ -4,10 +4,10 @@
 
 {% block content %}
 
-<div class="card">
-    <h1>Admin Dashboard</h1>
+<div class="container-admin">
+    <h1><u>Admin Dashboard</u></h1><br>
     
-    <h2>Pending Approvals ({{ pending_users|length }})</h2>
+    <h2>Pending Approvals ({{ pending_users|length }})</h2><br>
     {% if pending_users %}
         <table>
             <thead>
@@ -17,7 +17,7 @@
                     <th>Registration Date</th>
                     <th>Actions</th>
                 </tr>
-            </thead>
+            </thead><br><br>
             <tbody>
                 {% for user in pending_users %}
                 <tr>
@@ -38,7 +38,7 @@
             </tbody>
         </table>
     {% else %}
-        <p>No pending approvals.</p>
+        <p>No pending approvals.</p><br><br>
     {% endif %}
 
     <h2>Approved Users ({{ approved_users|length }})</h2>
@@ -64,12 +64,11 @@
                     <td>{{ 'Yes' if user.is_admin else 'No' }}</td>
                     <td>
                         {% if not user.is_admin %}
-                            <a href="{{ url_for('admin.revoke_access', user_id=user.id) }}"
-                               onclick="return confirm('Are you sure you want to revoke access for this user?')">
-                                <button class="btn-danger">Revoke Access</button>
+                            <a href="{{ url_for('admin.user_profile', user_id=user.id) }}">
+                                <button class="btn-info">More</button>
                             </a>
                         {% endif %}
-                    </td>
+                    </td> 
                 </tr>
                 {% endfor %}
             </tbody>

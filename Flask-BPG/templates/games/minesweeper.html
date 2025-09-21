@@ -156,7 +156,7 @@ button:active, select:active {
 
     function restart() {
       const difficulty = document.getElementById("difficulty").value;
-      window.location.href = `/minesweeper-reset?mode=${difficulty}`;
+      window.location.href = `/games/minesweeper-reset?mode=${difficulty}`;
     }
 
     function renderGrid() {
@@ -175,7 +175,7 @@ button:active, select:active {
             startTimer();
             if (cell.classList.contains('flagged') || cell.classList.contains('revealed')) return;
 
-            fetch(`/minesweeper-reveal?row=${r}&col=${c}`)
+            fetch(`/games/minesweeper-reveal?row=${r}&col=${c}`)
               .then(res => res.json())
               .then(data => {
                 const gameOver = data.some(item => item.game_over);
@@ -241,7 +241,7 @@ button:active, select:active {
           if (!cell.classList.contains('revealed') && !cell.classList.contains('flagged')) {
             const row = cell.dataset.row;
             const col = cell.dataset.col;
-            fetch(`/minesweeper-reveal?row=${row}&col=${col}`)
+            fetch(`/games/minesweeper-reveal?row=${row}&col=${col}`)
               .then(res => res.json())
               .then(data => {
                 data.forEach(item => {
@@ -262,7 +262,7 @@ button:active, select:active {
     }
 
     // Initial load: fetch config from backend
-    fetch("/minesweeper-info")
+    fetch("/games/minesweeper-info")
       .then(res => res.json())
       .then(data => {
         rows = data.rows;

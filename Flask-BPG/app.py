@@ -66,17 +66,17 @@ def dashboard():
     return render_template('dashboard.html')
 
 #=========================== * MINESWEEPER * ===========================#
-@app.route('/minesweeper')
+@app.route('/games/minesweeper')
 @login_required
 def minesweeper():
-    return render_template('minesweeper.html')
+    return render_template('games/minesweeper.html')
 
-@app.route('/minesweeper-info')
+@app.route('/games/minesweeper-info')
 @login_required
 def min_info():
     return jsonify({'rows': mgame.rows, 'cols': mgame.cols, 'mines':mgame.mines})
 
-@app.route('/minesweeper-reset')
+@app.route('/games/minesweeper-reset')
 @login_required
 def min_reset():
     mode = request.args.get('mode', 'easy')
@@ -90,9 +90,9 @@ def min_reset():
         rows, cols, mines = config_rows, config_cols, config_mines  # fallback to custom/default
     global mgame
     mgame = Minesweeper(rows, cols, mines)
-    return redirect('/minesweeper')
+    return redirect('/games/minesweeper')
 
-@app.route('/minesweeper-reveal')
+@app.route('/games/minesweeper-reveal')
 @login_required
 def min_reveal():
     r = int(request.args.get('row'))
@@ -107,17 +107,17 @@ def min_reveal():
     return jsonify(data)
 
 #=========================== * LIGHTS OUT * ===========================#
-@app.route('/lights-off')
+@app.route('/games/lights-off')
 @login_required
 def lights_off():
-    return render_template('LightsOut.html')
+    return render_template('games/LightsOut.html')
 
-@app.route('/lights-off-config')
+@app.route('/games/lights-off-config')
 @login_required
 def lights_off_config():
     return jsonify({'rows': lgame.rows, 'cols': lgame.cols})
 
-@app.route('/lights-off-reset')
+@app.route('/games/lights-off-reset')
 @login_required
 def lights_off_reset():
     mode = request.args.get('mode', 'easy')
@@ -133,7 +133,7 @@ def lights_off_reset():
     lgame = LightsOutGame(rows, cols)
     return jsonify(lgame.get_state())
 
-@app.route('/lights-off-toggle', methods=['POST'])
+@app.route('/games/lights-off-toggle', methods=['POST'])
 @login_required
 def lights_off_toggle():
     r = int(request.json.get('row'))
@@ -142,23 +142,23 @@ def lights_off_toggle():
     return jsonify(lgame.get_state())
 
 #=========================== * BRICK BREAKER * ===========================#
-@app.route("/brickbreaker")
+@app.route("/games/brickbreaker")
 @login_required
 def brickbreaker_page():
-    return render_template("brick_breaker.html")
+    return render_template("games/brick_breaker.html")
 
-@app.route("/brickbreaker-state")
+@app.route("/games/brickbreaker-state")
 @login_required
 def get_state():
     return jsonify(bgame.get_state())
 
-@app.route("/brickbreaker-step")
+@app.route("/games/brickbreaker-step")
 @login_required
 def step():
     bgame.step()
     return jsonify(bgame.get_state())
 
-@app.route("/brickbreaker-move", methods=["POST"])
+@app.route("/games/brickbreaker-move", methods=["POST"])
 @login_required
 def move_paddle():
     direction = request.json.get("direction")
@@ -168,17 +168,17 @@ def move_paddle():
         bgame.paddle.move_right()
     return jsonify(bgame.get_state())
 
-@app.route("/brickbreaker-reset")
+@app.route("/games/brickbreaker-reset")
 @login_required
 def reset():
     bgame.reset()
     return jsonify(bgame.get_state())
 
 #=========================== * Snake * ===========================#
-@app.route('/snake')
+@app.route('/games/snake')
 @login_required
 def snake():
-    return render_template('snake.html')
+    return render_template('games/snake.html')
 
 @socketio.on('connect')
 def handle_connect(auth=None):
@@ -203,11 +203,12 @@ def restart():
         sgame = SnakeGame()
         emit('state', sgame.serialize())
 
+
+
 def create_tables():
     with app.app_context():
         db.create_all()
 
-        # Create default admin if doesn't exist
         admin = User.query.filter_by(username='z3n').first()
         if not admin:
             admin_user = User(
