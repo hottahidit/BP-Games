@@ -130,16 +130,45 @@ button:active, select:active {
 
   <div id="grid" class="grid"></div>
 
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const timerEl = document.getElementById("timer");
+      const flagsRemainingEl = document.getElementById("flags-remaining");
+      const gridEl = document.getElementById("grid");
+      const difficultySelect = document.getElementById("difficulty");
+
+      if (!timerEl || !flagsRemainingEl || !gridEl) {
+        console.error("Minesweeper: missing required DOM elements. Expected #timer, #flags-remaining, #grid.");
+        return;
+    }
+
     let rows = 10, cols = 10, totalFlags = 10;
     let flagsPlaced = 0;
     let timer = 0;
     let timerInterval = null;
     let timerStarted = false;
 
-    const timerEl = document.getElementById("timer");
-    const flagsRemainingEl = document.getElementById("flags-remaining");
-    const gridEl = document.getElementById('grid');
+    const socket = io();
+
+    socket.emit("join_game", { game_name: "minesweeper" });
+
+    socket.on("player_joined", (data) => {
+      console.log("Loaded progress:", data.progress);
+    });
+
+    socket.on("progress_saved", (data) => {
+      console.log("Progress saved:", data.progress);
+    });
+
+    function saveProgress(win = false) {
+      socket.emit("update_progress", {
+        game_name: "minesweeper",
+        score: win ? 100 : 0,
+        level: 1,
+        time_played: timer
+      });
+    }
 
     function startTimer() {
       if (timerStarted) return;
@@ -261,7 +290,6 @@ button:active, select:active {
       }
     }
 
-    // Initial load: fetch config from backend
     fetch("/games/minesweeper-info")
       .then(res => res.json())
       .then(data => {
@@ -275,6 +303,7 @@ button:active, select:active {
         flagsRemainingEl.textContent = totalFlags;
         renderGrid();
       });
+  }); 
   </script>
 </body>
 </html>

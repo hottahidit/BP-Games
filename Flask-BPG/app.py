@@ -1,12 +1,13 @@
 from flask import Flask, request, jsonify, render_template, redirect, url_for, flash, session
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
-from extra_utils import db, login_manager
-#from Auth.models import User
-#from Auth.login import auth_bp
-#from Auth.admin import admin_bp
+from Utils.extra_utils import db, login_manager
+from Utils.socketio_utils import register_socketio_events 
+from Auth.models import User
+from Auth.login import auth_bp
+from Auth.admin import admin_bp
 from Logic.minesweeper import Minesweeper
 from Logic.brick_breaker import BrickBreakerGame
 from Logic.LightsOut import LightsOutGame
@@ -25,9 +26,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'auth.login'
 login_manager.login_message = 'Please log in to access the games. This is to track your scores.'
 
-from Auth.models import User
-from Auth.login import auth_bp
-from Auth.admin import admin_bp
+register_socketio_events(socketio)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -42,10 +41,21 @@ mfirst_click_done = False
 
 config_rows, config_cols, config_mines = 10, 10, 10  # default to Easy
 
-mgame = Minesweeper(config_rows, config_cols, config_mines)
 bgame = BrickBreakerGame()
+mgame = Minesweeper(config_rows, config_cols, config_mines)
 lgame = LightsOutGame(config_rows, config_cols)
 sgame = SnakeGame()
+minesweeper_games = {}
+lightsout_games = {}
+snake_games = {}
+snake_threads = {}
+
+app.config["games"] = {
+    "minesweeper": mgame,
+    "brickbreaker": bgame,
+    "lightsout": lgame,
+    "snake": sgame
+}
 
 def snake_loop():
     global sgame
@@ -65,7 +75,7 @@ def home():
 def dashboard():
     return render_template('dashboard.html')
 
-#=========================== * MINESWEEPER * ===========================#
+#=========================== * Minesweeper * ===========================#
 @app.route('/games/minesweeper')
 @login_required
 def minesweeper():
@@ -74,7 +84,12 @@ def minesweeper():
 @app.route('/games/minesweeper-info')
 @login_required
 def min_info():
-    return jsonify({'rows': mgame.rows, 'cols': mgame.cols, 'mines':mgame.mines})
+    uid = current_user.id 
+    if uid not in minesweeper_games:
+        minesweeper_games[uid] = Minesweeper(config_rows, config_cols, config_mines)
+
+        game = minesweeper_games[uid]
+        return jsonify({'rows': mgame.rows, 'cols': mgame.cols, 'mines':mgame.mines})
 
 @app.route('/games/minesweeper-reset')
 @login_required
@@ -87,9 +102,10 @@ def min_reset():
     elif mode == 'hard':
         rows, cols, mines = 24, 24, 99
     else:
-        rows, cols, mines = config_rows, config_cols, config_mines  # fallback to custom/default
-    global mgame
-    mgame = Minesweeper(rows, cols, mines)
+        rows, cols, mines = config_rows, config_cols, config_mines  
+
+    uid = current_user.id
+    minesweeper_games[uid] = Minesweeper(rows, cols, mines)
     return redirect('/games/minesweeper')
 
 @app.route('/games/minesweeper-reveal')
@@ -98,29 +114,46 @@ def min_reveal():
     r = int(request.args.get('row'))
     c = int(request.args.get('col'))
     print(r, c)
+    uid = current_user.id
+    
+    if uid not in minesweeper_games:
+        user_minesweeper_games[uid] = Minesweeper(config_rows, config_cols, config_mines)
 
-    data, game_over = mgame.reveal_cell(r, c)
+    game = minesweeper_games[uid]
+    data, game_over = game.reveal_cell(r, c)
 
     if game_over:
         data.append({'game_over': True})
 
     return jsonify(data)
 
-#=========================== * LIGHTS OUT * ===========================#
+#=========================== * Lights Out * ===========================#
 @app.route('/games/lights-off')
 @login_required
 def lights_off():
+    uid = current_user.id
+    if uid not in lightsout_games:
+        lightsout_games[uid] = LightsOutGame(5, 5)
     return render_template('games/LightsOut.html')
+
 
 @app.route('/games/lights-off-config')
 @login_required
 def lights_off_config():
-    return jsonify({'rows': lgame.rows, 'cols': lgame.cols})
+    uid = current_user.id
+    game = lightsout_games.get(uid)
+    if not game:
+        game = LightsOutGame(5, 5)
+        lightsout_games[uid] = game
+    return jsonify({'rows': game.rows, 'cols': game.cols})
+
 
 @app.route('/games/lights-off-reset')
 @login_required
 def lights_off_reset():
+    uid = current_user.id
     mode = request.args.get('mode', 'easy')
+
     if mode == 'easy':
         rows, cols = 5, 5
     elif mode == 'medium':
@@ -128,20 +161,27 @@ def lights_off_reset():
     elif mode == 'hard':
         rows, cols = 10, 10
     else:
-        rows, cols = config_rows, config_cols
-    global lgame
-    lgame = LightsOutGame(rows, cols)
-    return jsonify(lgame.get_state())
+        rows, cols = 5, 5
+
+    lightsout_games[uid] = LightsOutGame(rows, cols)
+    return jsonify(lightsout_games[uid].get_state())
+
 
 @app.route('/games/lights-off-toggle', methods=['POST'])
 @login_required
 def lights_off_toggle():
+    uid = current_user.id
+    game = lightsout_games.get(uid)
+    if not game:
+        game = LightsOutGame(5, 5)
+        lightsout_games[uid] = game
+
     r = int(request.json.get('row'))
     c = int(request.json.get('col'))
-    lgame.toggle(r, c)
-    return jsonify(lgame.get_state())
+    game.toggle(r, c)
+    return jsonify(game.get_state())
 
-#=========================== * BRICK BREAKER * ===========================#
+#=========================== * Brick Breaker * ===========================#
 @app.route("/games/brickbreaker")
 @login_required
 def brickbreaker_page():
@@ -182,28 +222,61 @@ def snake():
 
 @socketio.on('connect')
 def handle_connect(auth=None):
-    if current_user.is_authenticated:
-        emit('state', sgame.serialize())
-        socketio.start_background_task(snake_loop)
-    else:
+    if not current_user.is_authenticated:
         emit('error', {'message': 'Authentication required'})
+        return
+
+    uid = current_user.id
+    join_room(str(uid))
+
+    if uid not in snake_games:
+        snake_games[uid] = SnakeGame()
+
+    game = snake_games[uid]
+    emit('state', game.serialize(), room=str(uid))
+
+    if uid not in snake_threads:
+        def snake_loop(user_id):
+            while user_id in snake_games:
+                game = snake_games[user_id]
+                game.tick()
+                socketio.emit('state', game.serialize(), room=str(user_id))
+                time.sleep(game.tick_delay)
+
+        snake_threads[uid] = socketio.start_background_task(snake_loop, uid)
 
 @socketio.on('change_dir')
 def change_dir(data):
-    if current_user.is_authenticated:
-        global sgame
-        dx = int(data.get('dx', 0))
-        dy = int(data.get('dy', 0))
-        sgame.change_dir(dx, dy)
+    if not current_user.is_authenticated:
+        return
+
+    uid = current_user.id
+    game = snake_games.get(uid)
+    if not game:
+        return
+
+    dx = int(data.get('dx', 0))
+    dy = int(data.get('dy', 0))
+    game.change_dir(dx, dy)
 
 @socketio.on('restart')
 def restart():
-    if current_user.is_authenticated:
-        global sgame
-        sgame = SnakeGame()
-        emit('state', sgame.serialize())
+    if not current_user.is_authenticated:
+        return
 
+    uid = current_user.id
+    snake_games[uid] = SnakeGame()
+    emit('state', snake_games[uid].serialize(), room=str(uid))
 
+@socketio.on('disconnect')
+def handle_disconnect():
+    if not current_user.is_authenticated:
+        return
+
+    uid = current_user.id
+    print(f"[DISCONNECT] Cleaning up user {uid}")
+    snake_games.pop(uid, None)
+    snake_threads.pop(uid, None)
 
 def create_tables():
     with app.app_context():
@@ -223,5 +296,6 @@ def create_tables():
             print("Default admin created - username: z3n, password: z3n4z3n")
 
 if __name__ == '__main__':
-    create_tables()
+    with app.app_context():
+        create_tables()
     socketio.run(app, debug=True)

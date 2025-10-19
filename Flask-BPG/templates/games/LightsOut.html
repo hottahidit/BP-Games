@@ -111,10 +111,11 @@
     </div>
 
     <div class="controls">
-        <select id="difficulty">
-        <option value="easy">Easy</option>
-        <option value="medium">Medium</option>
-        <option value="hard">Hard</option>
+        <div>
+          <button onclick="setDifficulty('easy')">Easy</button>
+          <button onclick="setDifficulty('medium')">Medium</button>
+          <button onclick="setDifficulty('hard')">Hard</button>
+        </div>
         </select>
         <button onclick="restart()">Restart</button>
         <button onclick='goToHome()'>Home</button>
@@ -122,12 +123,14 @@
 
     <div id="grid" class="grid"></div>
 
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
         let rows = 10, cols = 10, grid = [];
         let timer = 0, timerInterval = null, timerStarted = false;
 
         const timerEl = document.getElementById("timer");
         const gridEl = document.getElementById('grid');
+        const socket = io();
 
         function startTimer() {
             if (timerStarted) return;
@@ -197,18 +200,43 @@
             }
         }
 
-        // Initial load
+        function saveProgress() {
+          socket.emit("update_progress", {
+            game_name: "lightsout",
+            score: timer
+          });
+        }
+
+        socket.emit("join_game", { game: "lightsout" });
+
+        socket.on("load_progress", (data) => {
+          if (data && data.score) {
+            console.log("Resumed Lights Out progress:", data);
+            alert(`Your best time so far: ${data.score} seconds`);
+          }
+        });
+
+
         fetch('/games/lights-off-reset?mode=easy')
-            .then(res => res.json())
-            .then(data => {
-                rows = data.rows;
-                cols = data.cols;
-                grid = data.grid;
-                timer = 0;
-                timerStarted = false;
-                timerEl.textContent = "0";
-                renderGrid();
+        .then(res => res.json())
+        .then(config => {
+            rows = config.rows;
+            cols = config.cols;
+            return fetch('/games/lights-off-toggle', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ row: -1, col: -1 }) // harmless dummy click to trigger state fetch
             });
+        })
+        .then(res => res.json())
+        .then(data => {
+            grid = data.grid;
+            timer = 0;
+            timerStarted = false;
+            timerEl.textContent = "0";
+            renderGrid();
+        });
+
     </script>
 </body>
 </html>
